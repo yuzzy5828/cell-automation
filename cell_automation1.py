@@ -1,30 +1,49 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
-def f(x):
-    y = np.log(x+(x**2+1)**(1/2))
-    z = x*(2*(x**2)-3)*((x**2+1)**(1/2))+3*y
-    return z
+def apply_rule3(l_nb, current_num, r_nb):
+    # rule 184 をセットアップ(00011101)
+    if l_nb == 0 and current_num == 0 and r_nb == 0:
+        return 0
+    elif l_nb == 0 and current_num == 0 and r_nb == 1:
+        return 0
+    elif l_nb == 0 and current_num == 1 and r_nb == 0:
+        return 0
+    elif l_nb == 1 and current_num == 1 and r_nb == 0:
+        return 0
+    else:
+        return 1
 
-G = 6.673*(10**-11)
-A = 1
-phi = 16.15
-mu_ = -9.284747*(10**-24)
-m_p = 1.67262192*(10**-27)
-k = 1.380649*(10**-23)
+def cellular_automation(initial_state, steps):
+    # 初期状態をセットアップ
+    current_state = initial_state[:]
+    num_cells = len(current_state)
+    new_state = [0] * num_cells  # 初期化
 
-m_e = 9.10938*(10**-31)
-c = 2.99792458*(10**8)
-h = 6.62607015*(10**-34)
-n = 10**29 #仮に決めた
-p_F = (3/(8*np.pi)**(1/3))*h*(n**(1/3))
-s = p_F/(m_e*c)
-P_e = f(s)
+    for step in range(steps):
+        print(f"Step {step + 1}: {current_state}")
 
-x_max = A / (A / phi) ** (2 / 3)
+        # 新しい状態を計算
+        for i in range(num_cells):
+            # 周期境界条件を適用
+            l_nb = current_state[i - 1]
+            r_nb = current_state[(i + 1) % num_cells]
+            new_state[i] = apply_rule3(l_nb, current_state[i], r_nb)
 
-x = np.linspace(0, x_max, 10*5)
-y = (((4 * np.pi * G) ** (1 / 2) * A / phi) ** (2 / 3) * x ** (4 / 3) - P_e) * mu_ * m_p / k / x
+        # 状態を更新
+        current_state = new_state[:]
 
-plt.plot(x, y)
-plt.show()
+    return current_state
+
+if __name__ == "__main__":
+    # 初期状態をランダムに設定
+    np.random.seed(357)  # シードを参照して再現性を持たせた
+    initial_state = np.random.choice([0, 1], size=20)
+
+    # シミュレーションのステップ数を指定
+    steps = 20
+
+    # セルオートマトン実装
+    final_state = cellular_automation(initial_state, steps)
+    print(f"Final State: {final_state}")
